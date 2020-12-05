@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch import nn
 
+
 class ResTCN(nn.Module):
     """
         Residual Temporal Convolution Network\n
@@ -15,6 +16,8 @@ class ResTCN(nn.Module):
         self.batch_norm = nn.BatchNorm1d(
             num_features=feature_length, eps=eps, momentum=momentum)
         self.activation = nn.ReLU()
+        self.reshape = nn.Conv1d(
+            feature_length, num_filters, kernel_size=1, stride=stride)
         self.conv = nn.Conv1d(
             in_channels=feature_length, out_channels=num_filters, kernel_size=filter_length, stride=stride, padding=padding)
 
@@ -23,5 +26,6 @@ class ResTCN(nn.Module):
         x = self.batch_norm(x)
         x = self.activation(x)
         x = self.conv(x)
-        assert orig_x.shape[1:] == x.shape[1:], "Xinput.Features != Xoutput.Features"
-        return x+orig_x
+        if orig_x.shape == x.shape:
+            return x+orig_x
+        return x+self.reshape(orig_x)
