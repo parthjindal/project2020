@@ -48,9 +48,3 @@ class Network(nn.Module):
         return x
 
 
-x = np.random.randn(32, 104).reshape(1, 32, 104)
-x = torch.from_numpy(x).to(dtype=torch.float32).to("cuda:0")
-model = Network(32).to("cuda:0")
-
-
-print(model(x).shape)
