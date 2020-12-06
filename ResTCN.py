@@ -23,13 +23,13 @@ class ResTCN(nn.Module):
                 padding = (int((filter_length-1)/2), int((filter_length+1)/2))
             else:
                 padding = (int((filter_length-1)/2), int((filter_length-1)/2))
-
+        else:
+            padding = kwargs['padding']
         self.pad = nn.ConstantPad1d(padding, value=0)
-
         self.conv = nn.Conv1d(
             in_channels=feature_length, out_channels=num_filters, kernel_size=filter_length, stride=stride)
         self.reshape = nn.Conv1d(
-            feature_length, num_filters, kernel_size=1, stride=stride)
+            feature_length, num_filters, kernel_size=1, stride=stride, bias=False)
 
     def forward(self, x):
         orig_x = x
