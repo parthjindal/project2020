@@ -1,36 +1,47 @@
 import torch
 from torch import optim
-from configs import config
+from config import _C as cfg
 
 
-def get_optimizer(model):
+def get_optimizer(model, cfg):
     optimizer = None
-    if config['optimizer'] == 'sgd':
+    if cfg.OPTIMIZER == 'sgd':
         optimizer = optim.SGD(
             model.parameters(),
-            lr=config['sgd']['lr'],
-            momentum=config['sgd']['momentum'],
-            weight_decay=config['sgd']['weight_decay'],
+            lr=cfg.SGD.LR,
+            momentum=cfg.SGD.MOMENTUMS,
+            weight_decay=cfg.SGD.WEIGHT_DECAY
         )
-    elif config['optimizer'] == 'adam':
+
+    elif cfg.OPTIMIZER == 'adam':
         optimizer = optim.Adam(
             model.parameters(),
-            lr=config['adam']['lr'],
-            betas=config['adam']['betas'],
-            weight_decay=config['adam']['weight_decay'],
-            eps=config['adam']['eps']
+            lr=cfg.ADAM.LR,
+            betas=cfg.ADAM.BETAS,
+            weight_decay=cfg.ADAM.WEIGHT_DECAY,
+            eps=cfg.ADAM.EPS
         )
     return optimizer
 
+
 def create_logger():
-    ###TODO
+    # TODO
     pass
 
-def save_checkpoint(states, is_best, output_dir=None,
+
+def save_checkpoint(states, is_best, output_dir=cfg.MODEL.DIR,
                     filename="checkpoint.pth"):
-    output_dir = config['model_dir']
+    # output_dir = config['model_dir']
     torch.save(states, os.path.join(output_dir, filename))
 
     if is_best and 'state_dict' in states:
         torch.save(states['best_state_dict'],
                    os.path.join(output_dir, 'model_best.pth'))
+
+
+def from_numpy(device=None, *args, **kwargs):
+    return torch.from_numpy(*args, **kwargs).float().to(device)
+
+
+def to_numpy(tensor):
+    return tensor.to('cpu').detach().numpy()
