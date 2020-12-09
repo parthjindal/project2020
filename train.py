@@ -19,6 +19,7 @@ def main():
     for epoch in range(0, params['epochs']):
         training_log = trainer.train()
         all_log.append(training_log)
+        print("Epoch: {} & Loss: {}".format(epoch,training_log[0]))
 
 if __name__ =="__main__":
     main()

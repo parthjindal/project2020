@@ -4,6 +4,7 @@ _C = CN()
 _C.SYSTEM = CN()
 _C.SYSTEM.NUM_GPUS = 1
 _C.SYSTEM.NUM_WORKERS = 4
+_C.DEVICE = 'cpu'
 
 _C.OPTIMIZER = "adam"
 
