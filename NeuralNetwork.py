@@ -1,10 +1,11 @@
 from ResTCN import ResTCN
-import torch as tf
+import torch
 from torch import nn
 import numpy as np
 from collections import OrderedDict
 from utils import *
 from config import _C as cfg
+
 
 class BuildBlock(nn.Module):
     def __init__(self, feature_length=None, num_filters=1, filter_length=1, stride=(1, 1, 1), eps=1e-5, momentum=0, **kwargs):
@@ -40,11 +41,16 @@ class Network(nn.Module):
         self.pad = nn.ConstantPad1d(padding, value=0)
         self.conv1 = nn.Conv1d(in_channels=feature_length,
                                out_channels=cfg.BLOCK1.NUM_FILTERS, kernel_size=cfg.FILTER_LENGTH, stride=1)
-        self.linear1 = nn.Linear(in_features=cfg.BLOCK1.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
-        self.linear2 = nn.Linear(in_features=cfg.BLOCK2.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
-        self.linear3 = nn.Linear(in_features=cfg.BLOCK3.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
-        self.linear4 = nn.Linear(in_features=cfg.BLOCK4.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
-        self.linear5 = nn.Linear(in_features=4*cfg.OUTPUT_CLASSES,out_features=cfg.OUTPUT_CLASSES)
+        self.linear1 = nn.Linear(
+            in_features=cfg.BLOCK1.NUM_FILTERS, out_features=cfg.OUTPUT_CLASSES)
+        self.linear2 = nn.Linear(
+            in_features=cfg.BLOCK2.NUM_FILTERS, out_features=cfg.OUTPUT_CLASSES)
+        self.linear3 = nn.Linear(
+            in_features=cfg.BLOCK3.NUM_FILTERS, out_features=cfg.OUTPUT_CLASSES)
+        self.linear4 = nn.Linear(
+            in_features=cfg.BLOCK4.NUM_FILTERS, out_features=cfg.OUTPUT_CLASSES)
+        self.linear5 = nn.Linear(
+            in_features=4*cfg.OUTPUT_CLASSES, out_features=cfg.OUTPUT_CLASSES)
         self.Block1 = BuildBlock(
             cfg.BLOCK1.NUM_FILTERS, cfg.BLOCK1.NUM_FILTERS, cfg.FILTER_LENGTH, cfg.BLOCK1.STRIDE)
         self.Block2 = BuildBlock(
@@ -74,6 +80,7 @@ class Network(nn.Module):
         x = x + x4
         x4 = x.mean(dim=(2))
         x4 = self.linear3(x4)
-        x = tf.cat(x1,x2,x3,x4)
+        x = torch.cat(x1, x2, x3, x4)
         x = self.linear5(x)
-        return x1,x2,x3,x4,x
+
+        return x1, x2, x3, x4, x
