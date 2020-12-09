@@ -44,8 +44,7 @@ class Network(nn.Module):
         self.linear2 = nn.linear(in_channels=cfg.BLOCK2.NUM_FILTERS,out_channels=50)
         self.linear3 = nn.linear(in_channels=cfg.BLOCK3.NUM_FILTERS,out_channels=50)
         self.linear4 = nn.linear(in_channels=cfg.BLOCK4.NUM_FILTERS,out_channels=50)
-        self.linear5 = nn.linear(in_channels=200,out_channels=1)
-        self.signoid = nn.signoid()
+        self.linear5 = nn.linear(in_channels=200,out_channels=cfs.OUTPUT_CLASSES)
         self.Block1 = BuildBlock(
             cfg.BLOCK1.NUM_FILTERS, cfg.BLOCK1.NUM_FILTERS, cfg.FILTER_LENGTH, cfg.BLOCK1.STRIDE)
         self.Block2 = BuildBlock(
@@ -77,5 +76,4 @@ class Network(nn.Module):
         x4 = self.linear3(x4)
         x = tf.cat(x1,x2,x3,x4)
         x = self.linear5(x)
-        x = x .signoid()
         return x1,x2,x3,x4,x
