@@ -5,7 +5,7 @@ from torch.utils.tensorboard import SummaryWriter
 import os
 
 
-def get_optimizer(model, cfg):
+def get_optimizer(model, cfg=cfg):
     optimizer = None
     if cfg.OPTIMIZER == 'sgd':
         optimizer = optim.SGD(
@@ -68,3 +68,9 @@ def from_numpy(device=None, *args, **kwargs):
 
 def to_numpy(tensor):
     return tensor.to('cpu').detach().numpy()
+
+def get_training_set_size():
+    pass
+
+def get_batch():
+    pass
