@@ -24,7 +24,7 @@ class BuildBlock(nn.Module):
 
 
 class Network(nn.Module):
-    def __init__(self, feature_length=None, cfg=None, **kwargs):
+    def __init__(self, feature_length=17, cfg=cfg, **kwargs):
         super(Network, self).__init__()
 
         f = cfg.FILTER_LENGTH
@@ -40,11 +40,11 @@ class Network(nn.Module):
         self.pad = nn.ConstantPad1d(padding, value=0)
         self.conv1 = nn.Conv1d(in_channels=feature_length,
                                out_channels=cfg.BLOCK1.NUM_FILTERS, kernel_size=cfg.FILTER_LENGTH, stride=1)
-        self.linear1 = nn.linear(in_channels=cfg.BLOCK1.NUM_FILTERS,out_channels=50)
-        self.linear2 = nn.linear(in_channels=cfg.BLOCK2.NUM_FILTERS,out_channels=50)
-        self.linear3 = nn.linear(in_channels=cfg.BLOCK3.NUM_FILTERS,out_channels=50)
-        self.linear4 = nn.linear(in_channels=cfg.BLOCK4.NUM_FILTERS,out_channels=50)
-        self.linear5 = nn.linear(in_channels=200,out_channels=cfs.OUTPUT_CLASSES)
+        self.linear1 = nn.Linear(in_features=cfg.BLOCK1.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
+        self.linear2 = nn.Linear(in_features=cfg.BLOCK2.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
+        self.linear3 = nn.Linear(in_features=cfg.BLOCK3.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
+        self.linear4 = nn.Linear(in_features=cfg.BLOCK4.NUM_FILTERS,out_features=cfg.OUTPUT_CLASSES)
+        self.linear5 = nn.Linear(in_features=4*cfg.OUTPUT_CLASSES,out_features=cfg.OUTPUT_CLASSES)
         self.Block1 = BuildBlock(
             cfg.BLOCK1.NUM_FILTERS, cfg.BLOCK1.NUM_FILTERS, cfg.FILTER_LENGTH, cfg.BLOCK1.STRIDE)
         self.Block2 = BuildBlock(

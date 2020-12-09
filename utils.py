@@ -5,7 +5,7 @@ from torch.utils.tensorboard import SummaryWriter
 import os
 
 
-def get_optimizer(model, cfg):
+def get_optimizer(model, cfg=cfg):
     optimizer = None
     if cfg.OPTIMIZER == 'sgd':
         optimizer = optim.SGD(
@@ -21,7 +21,6 @@ def get_optimizer(model, cfg):
             lr=cfg.ADAM.LR,
             betas=cfg.ADAM.BETAS,
             weight_decay=cfg.ADAM.WEIGHT_DECAY,
-            eps=cfg.ADAM.EPS
         )
     return optimizer
 
@@ -43,6 +42,7 @@ class Logger:
             '{}_{}'.format(group_name), scalar_dict, step)
 
     def log_video(self, video_frames, name, step, fps=10):
+        eps=cfg.ADAM.EPS
         assert len(
             video_frames.shape) == 5, "Need [N, T, C, H, W] input tensor for video logging!"
         self._summ_writer.add_video('{}'.format(
@@ -68,6 +68,9 @@ def from_numpy(device=None, *args, **kwargs):
 
 def to_numpy(tensor):
     return tensor.to('cpu').detach().numpy()
-    
+
 def get_training_set_size():
+    pass
+
+def get_batch():
     pass
