@@ -62,7 +62,7 @@ def save_checkpoint(states, is_best, output_dir=cfg.MODEL.DIR,
                    os.path.join(output_dir, 'model_best.pth'))
 
 
-def from_numpy(device=None, *args, **kwargs):
+def from_numpy(device='cpu', *args, **kwargs):
     return torch.from_numpy(*args, **kwargs).float().to(device)
 
 
