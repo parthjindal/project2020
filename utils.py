@@ -68,3 +68,6 @@ def from_numpy(device=None, *args, **kwargs):
 
 def to_numpy(tensor):
     return tensor.to('cpu').detach().numpy()
+    
+def get_training_set_size():
+    pass
