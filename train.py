@@ -15,5 +15,7 @@ def main():
     cfg.BATCHSIZE = params['batch-size']
     model = Network()
     trainer = ResTCN_trainer(model)
+    all_log = []
     for epoch in range(0, params['epochs']):
-        trainer.train()
+        training_log = trainer.train()
+        all_log.append(training_log)

@@ -36,6 +36,9 @@ class ResTCN_trainer():
             loss3.backward(retain_graph=True)
             loss4.backward()
             optimizer.step()
+        return{
+            'Training Loss': utils.to_numpy(loss1)+utils.to_numpy(loss2)+utils.to_numpy(loss3)+utils.to_numpy(loss4)
+        }
 
     def validate():
         pass
