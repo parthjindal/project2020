@@ -19,7 +19,6 @@ class ResTCN_trainer():
         self.trainset = LoadData(cfg, transform=None)
         self.load_data = DataLoader(
             self.trainset, batch_size=self.batch_size, shuffle=True)
-        print(self.batch_size)
         self.loss_fn = FKDLoss(cfg.TEMPERATURE)
         self.logger = Logger(cfg.LOGDIR)
 
@@ -27,11 +26,10 @@ class ResTCN_trainer():
         loss_history = np.ndarray((5,))
 
         for samples in self.load_data:
-            x = (samples['data']).to(cfg.DEVICE, dtype=torch.float32).reshape((samples['data'].shape[0],cfg.DATASET.NUM_JOINTS,-1))
+            x = (samples['data']).to(cfg.DEVICE, dtype=torch.float32).reshape(
+                (samples['data'].shape[0], cfg.DATASET.NUM_JOINTS, -1))
             labels = (samples['label']).to(
                 cfg.DEVICE, dtype=torch.long).reshape((samples['label'].shape[0],))
-            print(labels)
-            print(x.shape)
             y1, y2, y3, y4, y_hat = self.model(x)
             self.optimizer.zero_grad()
             loss = nn.CrossEntropyLoss(reduction='mean')(y_hat, labels)
@@ -76,7 +74,11 @@ class ResTCN_trainer():
             self.optimizer.step()  # take optimizer step after all grads accumulated
 
         return{
-            "Loss": loss_history
+            "Loss": loss_history[0],
+            "Loss1": loss_history[1],
+            "Loss2": loss_history[2],
+            "Loss3": loss_history[3],
+            "Loss4": loss_history[4]
         }
 
     def validate(self):
@@ -84,4 +86,3 @@ class ResTCN_trainer():
 
     def cal_accuracy(self):
         pass
-

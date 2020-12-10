@@ -1,36 +1,63 @@
-import os
+import argparse
 import numpy as np
-from config import _C as configs
+from config import _C as cfg
 from function import ResTCN_trainer
 from NeuralNetwork import Network
 from utils import Logger
+import torch
+from torch.utils.tensorboard import SummaryWriter
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train keypoints network')
+    # general
+    parser.add_argument('--cfg',
+                        help='experiment configure file name',
+                        required=False,
+                        type=str)
+
+    parser.add_argument('--batchsize',
+                        help='batchsize',
+                        type=int, required=False)
+
+    parser.add_argument('--epochs',
+                        help='episodes',
+                        type=int, required=False)
+
+    parser.add_argument('opts',
+                        help="Modify config options using the command-line",
+                        default=None,
+                        nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+
+    if args.cfg is not None:
+        cfg.merge_from_file(args.cfg)
+    if args.batchsize is not None:
+        cfg.EPOCHS = params['epochs']
+    if args.epochs is not None:
+        cfg.BATCHSIZE = params['batchsize']
+    cfg.merge_from_list(args.opts)
+
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--batchsize',type=int,default=256)
-    parser.add_argument('--epochs',type=int,default=1000)
-    args = parser.parse_args()
-    params = vars(args)
+    parse_args()
 
-    configs.EPOCHS = params['epochs']
-    configs.BATCHSIZE = params['batchsize']
-    
-    model = Network(cfg= configs)
+    logger = Logger(cfg.LOGDIR)
+    model = Network(cfg)
+    dump_input = torch.rand(
+        (1, cfg.DATASET.NUM_JOINTS, 10)
+    )
+    logger.add_graph(model, (dump_input,))  # Log Model Architecture
     trainer = ResTCN_trainer(model)
 
-    all_log = []
-    #TODO:
-    #ADD LOGGER FOR TRAINING DATA
-    #APPEND LOSSES INDIVIDUALLY
-    
-    for epoch in range(0, params['epochs']):
-
+    for epoch in range(cfg.EPOCHS):
         training_log = trainer.train()
-        all_log.append(training_log['Loss'].sum())
         print("-"*50)
-        print("Epoch: {} & Loss: {}".format(epoch,training_log["Loss"].sum()))
+        print("Epoch: {} & Loss: {}".format(epoch, training_log["Loss"]))
         print("-"*50)
+        logger.log_scalars(training_log, "Training",logger.step)
+        logger.step += 1
 
-if __name__ =="__main__":
+
+if __name__ == "__main__":
     main()

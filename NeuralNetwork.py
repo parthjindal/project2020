@@ -25,10 +25,11 @@ class BuildBlock(nn.Module):
 
 
 class Network(nn.Module):
-    def __init__(self, feature_length=cfg.DATASET.NUM_JOINTS, cfg=cfg, **kwargs):
+    def __init__(self,cfg,**kwargs):
         super(Network, self).__init__()
 
         f = cfg.FILTER_LENGTH
+        feature_length = cfg.DATASET.NUM_JOINTS
         if 'padding' not in kwargs.keys():  # Initialize Padding
             if f % 2 == 0:
                 padding = (int((f-1)/2), int((f+1)/2))

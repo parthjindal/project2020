@@ -10,7 +10,6 @@ class ResTCN(nn.Module):
         Layers:Batchnorm-->Relu/Activation-->1D_Convolution
 
     """
-
     def __init__(self, feature_length=None, num_filters=1, filter_length=1, stride=1, eps=1e-5, momentum=0, **kwargs):
         super(ResTCN, self).__init__()
 
@@ -37,6 +36,4 @@ class ResTCN(nn.Module):
         x = self.activation(x)
         x = self.pad(x)
         x = self.conv(x)
-        if orig_x.shape == x.shape:
-            return x+orig_x
         return x+self.reshape(orig_x)
