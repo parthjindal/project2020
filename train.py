@@ -1,12 +1,12 @@
 import argparse
 import numpy as np
+import os
 from config import _C as cfg
 from function import ResTCN_trainer
 from NeuralNetwork import Network
-from utils import Logger
+from utils import *
 import torch
-from torch.utils.tensorboard import SummaryWriter
-
+from torchsummary import summary
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -40,23 +40,46 @@ def parse_args():
 
 
 def main():
-    parse_args()
 
-    logger = Logger(cfg.LOGDIR)
+    parse_args()
+    seed = torch.seed()%20
+    log_dir = cfg.TENSORBOARD_DIR + cfg.MODEL.NAME + "/"+str(seed)
+    logger = Logger(log_dir)
+    model_dir = cfg.MODEL.DIR + cfg.MODEL.NAME + "/"+str(seed)
+    if os.path.isdir(model_dir)!=True:
+        os.makedirs(model_dir)
+
     model = Network(cfg)
     dump_input = torch.rand(
-        (1, cfg.DATASET.NUM_JOINTS, 10)
+        (1, cfg.DATASET.NUM_JOINTS,cfg.DEFAULT_FRAMES)
     )
     logger.add_graph(model, (dump_input,))  # Log Model Architecture
+    
+    #Toggle to get model summary
+    summary(model,dump_input.shape[1:],batch_size=32,device="cpu")
     trainer = ResTCN_trainer(model)
 
+    optimizer = trainer.optimizer
+    print("------STARTING TRAINING-------")
+    
     for epoch in range(cfg.EPOCHS):
+
         training_log = trainer.train()
         print("-"*50)
         print("Epoch: {} & Loss: {}".format(epoch, training_log["Loss"]))
         print("-"*50)
-        logger.log_scalars(training_log, "Training",logger.step)
+        logger.log_scalars(training_log,logger.step)
         logger.step += 1
+
+        if epoch % cfg.SAVE_FREQUENCY == 0:
+            perf_indicator = trainer.cal_accuracy()
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'model': cfg.MODEL.NAME+str(seed),
+                'state_dict': model.state_dict(),
+                'perf': perf_indicator,
+                'optimizer': optimizer.state_dict(),
+            }, output_dir= model_dir)
 
 
 if __name__ == "__main__":

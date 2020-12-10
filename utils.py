@@ -28,20 +28,19 @@ def get_optimizer(model, cfg=cfg):
 
 class Logger:
     def __init__(self, log_dir, summary_writer=None):
-        self.writer = SummaryWriter(log_dir, flush_secs=1, max_queue=1)
+        self.writer = SummaryWriter(log_dir, flush_secs=1, max_queue=20)
         self.step = 0
 
-    def add_graph(self,model=None,input:tuple = None):
-        self.writer.add_graph(model,input)
+    def add_graph(self, model=None, input: tuple = None):
+        self.writer.add_graph(model, input)
         self.flush()
 
     def log_scalar(self, scalar, name, step_):
         self.writer.add_scalar('{}'.format(name), scalar, step_)
 
-    def log_scalars(self, scalar_dict, group_name, step,phase='train'):
+    def log_scalars(self, scalar_dict, step, phase='Train_'):
         """Will log all scalars in the same plot."""
-        self.writer.add_scalars(
-            '{}_{}'.format(group_name,phase), scalar_dict,step)
+        self.writer.add_scalars(phase, scalar_dict, step)
 
     def log_video(self, video_frames, name, step, fps=10):
         assert len(
@@ -55,15 +54,14 @@ class Logger:
     def close(self):
         self.writer.close()
 
+
 def save_checkpoint(states, is_best=False, output_dir=cfg.MODEL.DIR,
                     filename="checkpoint.pth"):
-    # output_dir = config['model_dir']
     torch.save(states, os.path.join(output_dir, filename))
 
-    if is_best and 'state_dict' in states:
+    if is_best == True and 'state_dict' in states:
         torch.save(states['best_state_dict'],
                    os.path.join(output_dir, 'model_best.pth'))
-
 
 def from_numpy(device=None, *args, **kwargs):
     return torch.from_numpy(*args, **kwargs).float().to(device)

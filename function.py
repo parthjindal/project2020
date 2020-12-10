@@ -20,7 +20,6 @@ class ResTCN_trainer():
         self.load_data = DataLoader(
             self.trainset, batch_size=self.batch_size, shuffle=True)
         self.loss_fn = FKDLoss(cfg.TEMPERATURE)
-        self.logger = Logger(cfg.LOGDIR)
 
     def train(self):
         loss_history = np.ndarray((5,))
@@ -85,4 +84,4 @@ class ResTCN_trainer():
         pass
 
     def cal_accuracy(self):
-        pass
+        return 0
