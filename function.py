@@ -41,7 +41,7 @@ class ResTCN_trainer():
             #print(F.softmax(y_hat,dim=1))
             #loss = nn.CrossEntropyLoss(reduction='mean')(F.softmax(y_hat,dim=1), labels)
             
-            loss = nn.CrossEntropyLoss(reduction='mean')(F.softmax(y_hat,dim=1), labels)
+            loss = nn.CrossEntropyLoss(reduction='mean')(y_hat, labels)
             loss.backward(retain_graph=True)
             loss_history[0] += utils.to_numpy(loss)
 
@@ -99,7 +99,7 @@ class ResTCN_trainer():
             labels = (samples['label']).to(
                 cfg.DEVICE, dtype=torch.long).reshape((samples['label'].shape[0],))
             y1, y2, y3, y4, y_hat = self.model(x)
-            loss = nn.CrossEntropyLoss(reduction='mean')(F.softmax(y_hat,dim=1), labels)
+            loss = nn.CrossEntropyLoss(reduction='mean')(y_hat, labels)
 
             loss_history[0] += utils.to_numpy(loss)
 
