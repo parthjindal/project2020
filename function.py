@@ -4,7 +4,7 @@ from torch import nn
 from loss import FKDLoss
 import numpy as np
 import utils
-from utils import to_numpy
+from utils import to_numpy, Logger
 from dataset import LoadData
 from config import _C as cfg
 from torch.utils.data import DataLoader
@@ -13,64 +13,70 @@ from torch.utils.data import DataLoader
 class ResTCN_trainer():
 
     def __init__(self, model):
-        self.model = model
+        self.model = model.to(device=cfg.DEVICE)
         self.optimizer = utils.get_optimizer(model)
         self.batch_size = cfg.BATCHSIZE
         self.trainset = LoadData(cfg, transform=None)
         self.load_data = DataLoader(
             self.trainset, batch_size=self.batch_size, shuffle=True)
-        #self.Training_set_size = len(self.trainset)
+        print(self.batch_size)
+        self.loss_fn = FKDLoss(cfg.TEMPERATURE)
+        self.logger = Logger(cfg.LOGDIR)
 
     def train(self):
-        # checkout https://stackoverflow.com/questions/46774641/what-does-the-parameter-retain-graph-mean-in-the-variables-backward-method
-        '''
-        # suppose you first back-propagate loss1, then loss2 (you can also do the reverse)
-        loss1.backward(retain_graph=True)
-        loss2.backward() # now the graph is freed, and next process of batch gradient descent is ready
-        optimizer.step() # update the network parameters
-        '''
-        loss_history = [0., 0., 0., 0., 0.]
+        loss_history = np.ndarray((5,))
 
         for samples in self.load_data:
-            print(samples)
-            x = torch.DoubleTensor(samples['data']).to(cfg.DEVICE)
-            labels = torch.DoubleTensor(samples['label']).to(cfg.DEVICE)
-            y_pred = self.model(x)
-            y1, y2, y3, y4, y_hat = y_pred
-
+            x = (samples['data']).to(cfg.DEVICE, dtype=torch.float32).reshape((samples['data'].shape[0],cfg.DATASET.NUM_JOINTS,-1))
+            labels = (samples['label']).to(
+                cfg.DEVICE, dtype=torch.long).reshape((samples['label'].shape[0],))
+            print(labels)
+            print(x.shape)
+            y1, y2, y3, y4, y_hat = self.model(x)
             self.optimizer.zero_grad()
-            loss = nn.CrossEntropyLoss(y_hat, labels, reduction='mean')
-            loss.backward(retain_graph=True)
-            loss_fn = FKDLoss()
-            loss_history[0]=utils.to_numpy(loss)
-            #LOSS1
-            loss1 = loss_fn(y1, y_hat, labels)
-            loss1.backward()
-            loss_history[1]=utils.to_numpy(loss1)
-            #LOSS2
-            loss2 = loss_fn(y2, y_hat, labels)
-            loss2.backward()
-            loss_history[2]=utils.to_numpy(loss2)
-            #LOSS3
-            loss3 = loss_fn(y3, y_hat, labels)
-            loss3.backward()
-            loss_history[3]=utils.to_numpy(loss3)
-            #LOSS4
-            loss4 = loss_fn(y4, y_hat, labels)
-            loss4.backward()
-            loss_history[4]=utils.to_numpy(loss4)
+            loss = nn.CrossEntropyLoss(reduction='mean')(y_hat, labels)
 
-            optimizer.step()
-            # loss_history.append(loss1)
-            # TODO: ADD LOSS_HISTORY TO LOGGER AND TENSORBOARD
-            # TODO: PRETTY PRINT EPOCHS
-            # TODO: CHECK IF GRADIENTS WORK???
+            loss.backward(retain_graph=True)
+            loss_history[0] += utils.to_numpy(loss)
+
+            loss1 = self.loss_fn(y1, y_hat, labels)
+            loss1.backward(retain_graph=True)
+            loss_history[1] += utils.to_numpy(loss1)
+
+            # LOSS2
+            for name, parameter in self.model.named_parameters():
+                if 'conv1' in name or 'linear1' in name or 'Block1' in name:
+                    parameter.requires_grad = False
+
+            loss2 = self.loss_fn(y2, y_hat, labels)
+            loss2.backward(retain_graph=True)
+            loss_history[2] += utils.to_numpy(loss2)
+
+            # LOSS3
+            for name, parameter in self.model.named_parameters():
+                if 'conv2' in name or 'linear2' in name or 'Block2' in name:
+                    parameter.requires_grad = False
+
+            loss3 = self.loss_fn(y3, y_hat, labels)
+            loss3.backward(retain_graph=True)
+            loss_history[3] += utils.to_numpy(loss3)
+
+            # LOSS4
+            for name, parameter in self.model.named_parameters():
+                if 'conv3' in name or 'linear3' in name or 'Block3' in name:
+                    parameter.requires_grad = False
+
+            loss4 = self.loss_fn(y4, y_hat, labels)
+            loss4.backward(retain_graph=True)
+            loss_history[4] += utils.to_numpy(loss4)
+
+            for parameter in self.model.parameters():  # set requires_grad to True for all layers
+                parameter.requires_grad = True
+
+            self.optimizer.step()  # take optimizer step after all grads accumulated
 
         return{
-            'Training Loss': {
-                "Loss1": loss_history
-
-            }
+            "Loss": loss_history
         }
 
     def validate(self):
@@ -78,3 +84,4 @@ class ResTCN_trainer():
 
     def cal_accuracy(self):
         pass
+
