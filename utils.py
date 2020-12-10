@@ -3,6 +3,7 @@ from torch import optim
 from config import _C as cfg
 from torch.utils.tensorboard import SummaryWriter
 import os
+import numpy as np
 
 
 def get_optimizer(model, cfg=cfg):
@@ -24,6 +25,15 @@ def get_optimizer(model, cfg=cfg):
             eps=cfg.ADAM.EPS
         )
     return optimizer
+
+def onehotencoder(array):
+    n_values = np.max(array) + 1
+    onehot = np.eye(n_values)[array]  
+    return onehot    
+
+def fromonehot(array):
+    class_labels = np.argmax(array, axis=1)
+    return class_labels
 
 
 class Logger:

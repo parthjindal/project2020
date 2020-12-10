@@ -72,7 +72,7 @@ def main():
         logger.step += 1
 
         if epoch % cfg.SAVE_FREQUENCY == 0:
-            perf_indicator = trainer.cal_accuracy()
+            perf_indicator = trainer.cal_accuracy('train')
             save_checkpoint({
                 'epoch': epoch + 1,
                 'model': cfg.MODEL.NAME+str(seed),
