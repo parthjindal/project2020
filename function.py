@@ -17,7 +17,7 @@ class ResTCN_trainer():
         self.optimizer = utils.get_optimizer(model)
         self.batch_size = cfg.BATCHSIZE   
         self.loss_fn = FKDLoss(cfg.TEMPERATURE)
-        self.softmax = nn.Softmax(dim=0)
+
 
     def loaddata(self,type):
         self.trainset = LoadData(type, transform=None)
@@ -25,7 +25,7 @@ class ResTCN_trainer():
             self.trainset, batch_size=self.batch_size, shuffle=True)
 
     def train(self):
-        loss_history = np.ndarray((5,))
+        loss_history = np.zeros((5,))
         self.loaddata('train')
         
         for samples in self.load_data:
@@ -41,7 +41,7 @@ class ResTCN_trainer():
             #print(F.softmax(y_hat,dim=1))
             #loss = nn.CrossEntropyLoss(reduction='mean')(F.softmax(y_hat,dim=1), labels)
             
-            loss = nn.CrossEntropyLoss(reduction='mean')(y_hat, labels)
+            loss = nn.CrossEntropyLoss(reduction='mean')(F.softmax(y_hat,dim=1), labels)
             loss.backward(retain_graph=True)
             loss_history[0] += utils.to_numpy(loss)
 
@@ -99,7 +99,7 @@ class ResTCN_trainer():
             labels = (samples['label']).to(
                 cfg.DEVICE, dtype=torch.long).reshape((samples['label'].shape[0],))
             y1, y2, y3, y4, y_hat = self.model(x)
-            loss = nn.CrossEntropyLoss(reduction='mean')(y_hat, self.sotmax(labels))
+            loss = nn.CrossEntropyLoss(reduction='mean')(F.softmax(y_hat,dim=1), labels)
 
             loss_history[0] += utils.to_numpy(loss)
 
@@ -124,8 +124,8 @@ class ResTCN_trainer():
 
 
     def cal_accuracy(self,type):
-        return 0
-        self.model.eval()
+        #return 0
+        #self.model.eval()
         accuracy = 0
         sum = 0
         self.loaddata(type)
@@ -136,12 +136,18 @@ class ResTCN_trainer():
                 cfg.DEVICE, dtype=torch.long).reshape((samples['label'].shape[0],))
             
             _, _, _, _, y_hat = self.model(x)
-            y_hat = self.softmax(y_hat)
+            #y_hat = self.softmax(y_hat)
+            y_hat=F.softmax(y_hat,dim=1)
             y_hat = utils.to_numpy(y_hat)
+            print(y_hat)
             y_hat = np.round(y_hat)
             labels = utils.to_numpy(labels)
+            y_hat = utils.fromonehot(y_hat)
             accuracy += (y_hat==labels).sum()
             sum += labels.shape[0]
+            print(y_hat)
+            print(labels)
+        print(accuracy*100/sum)
         return accuracy*100/sum    
 
 
