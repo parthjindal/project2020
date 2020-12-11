@@ -20,7 +20,7 @@ class LoadData(Dataset):
 
     def __getitem__(self, index):
         #TODO: ENCODE LABELS FROM 0-(cfg.CLASSES-1)
-        data = np.asarray(self.data.iloc[index, 1:], dtype=np.float).reshape((17,-1))
+        data = np.asarray(self.data.iloc[index, 1:], dtype=np.float).reshape((cfg.DATASET.NUM_JOINTS,-1))
         label = self.label_encoder.transform([self.data.iloc[index, 0]])
         sample = {'data': data, 'label': label}
         if self.transform:
