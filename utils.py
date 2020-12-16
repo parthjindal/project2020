@@ -3,6 +3,7 @@ from torch import optim
 from config import _C as cfg
 from torch.utils.tensorboard import SummaryWriter
 import os
+import numpy as np
 
 
 def get_optimizer(model, cfg=cfg):
@@ -25,42 +26,52 @@ def get_optimizer(model, cfg=cfg):
         )
     return optimizer
 
+def onehotencoder(array):
+    n_values = np.max(array) + 1
+    onehot = np.eye(n_values)[array]  
+    return onehot    
+
+def fromonehot(array):
+    class_labels = np.argmax(array, axis=1)
+    return class_labels
+
 
 class Logger:
     def __init__(self, log_dir, summary_writer=None):
-        self._log_dir = log_dir
-        print('########################')
-        print('Logging outputs to ', log_dir)
-        print('########################')
-        self._summ_writer = SummaryWriter(log_dir, flush_secs=1, max_queue=1)
+        self.writer = SummaryWriter(log_dir, flush_secs=1, max_queue=20)
+        self.step = 0
+
+    def add_graph(self, model=None, input: tuple = None):
+        self.writer.add_graph(model, input)
+        self.flush()
 
     def log_scalar(self, scalar, name, step_):
-        self._summ_writer.add_scalar('{}'.format(name), scalar, step_)
+        self.writer.add_scalar('{}'.format(name), scalar, step_)
 
-    def log_scalars(self, scalar_dict, group_name, step):
+    def log_scalars(self, scalar_dict, step, phase='Train_'):
         """Will log all scalars in the same plot."""
-        self._summ_writer.add_scalars(
-            '{}_{}'.format(group_name), scalar_dict, step)
+        self.writer.add_scalars(phase, scalar_dict, step)
 
     def log_video(self, video_frames, name, step, fps=10):
         assert len(
             video_frames.shape) == 5, "Need [N, T, C, H, W] input tensor for video logging!"
-        self._summ_writer.add_video('{}'.format(
+        self.writer.add_video('{}'.format(
             name), video_frames, step, fps=fps)
 
     def flush(self):
-        self._summ_writer.flush()
+        self.writer.flush()
+
+    def close(self):
+        self.writer.close()
 
 
-def save_checkpoint(states, is_best, output_dir=cfg.MODEL.DIR,
+def save_checkpoint(states, is_best=False, output_dir=cfg.MODEL.DIR,
                     filename="checkpoint.pth"):
-    # output_dir = config['model_dir']
     torch.save(states, os.path.join(output_dir, filename))
 
-    if is_best and 'state_dict' in states:
+    if is_best == True and 'state_dict' in states:
         torch.save(states['best_state_dict'],
                    os.path.join(output_dir, 'model_best.pth'))
-
 
 def from_numpy(device=None, *args, **kwargs):
     return torch.from_numpy(*args, **kwargs).float().to(device)
@@ -68,9 +79,3 @@ def from_numpy(device=None, *args, **kwargs):
 
 def to_numpy(tensor):
     return tensor.to('cpu').detach().numpy()
-
-def get_training_set_size():
-    pass
-
-def get_batch():
-    pass
